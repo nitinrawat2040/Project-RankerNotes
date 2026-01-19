@@ -281,7 +281,11 @@ npm start
 
 MIT License - feel free to use this project for your needs.
 
-## Support
+## 👨‍💻 Author
 
-For issues or questions, please create an issue in the repository.
+ **Nitin Singh Rawat** <br>
+  You can connect with me on 👇
+- 📬 [Email](nitinrawat2040@gmail.com)
+- 💼 [LinkedIn](https://www.linkedin.com/in/nitin-singh-rawat-9594b228b)
+- 🧑‍💻 [GitHub](https://github.com/nitinrawat2040)
 
