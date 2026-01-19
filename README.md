@@ -208,13 +208,6 @@ The seed script has created:
 - ✅ Watermark overlay with user email
 - ✅ No direct PDF URL exposure
 
-### Limitations
-⚠️ **Important**: Complete protection against screenshots is not possible:
-- Users can take photos with another device
-- Advanced users may bypass browser restrictions
-- Screen recording software can capture content
-
-The implemented protections are deterrents and make casual sharing more difficult.
 
 ## API Endpoints
 
