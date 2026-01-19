@@ -1,8 +1,8 @@
-# Notes App - Secure PDF Viewer
+# 🗂️ Notes App - Secure PDF Viewer
 
 A web application where students can view study materials (PDFs) with restricted access - no downloads and no screenshots (best-effort protection).
 
-## Features
+## ✨ Features
 
 - 🔐 User authentication (Login/Signup)
 - 🏫 College and Semester selection
@@ -14,7 +14,7 @@ A web application where students can view study materials (PDFs) with restricted
   - Watermark overlay with user email
   - Disabled keyboard shortcuts (Ctrl+S, Ctrl+P)
 
-## Tech Stack
+## 🛠 Tech Stack
 
 ### Backend
 - Node.js + Express
@@ -29,7 +29,7 @@ A web application where students can view study materials (PDFs) with restricted
 - PDF.js for PDF rendering
 - Vite for build tooling
 
-## Project Structure
+## 🗃️ Project Structure
 
 ```
 Notes-App/
@@ -49,14 +49,14 @@ Notes-App/
 └── README.md
 ```
 
-## Setup Instructions
+## ⚙️ Setup Instructions
 
-### Prerequisites
+### 📌 Prerequisites
 - Node.js (v16 or higher)
 - MongoDB (local or MongoDB Atlas)
 - npm or yarn
 
-### Backend Setup
+### 🔧 Backend Setup
 
 1. Navigate to backend directory:
 ```bash
@@ -90,7 +90,7 @@ npm run dev
 
 The backend will run on `http://localhost:5100`
 
-### Frontend Setup
+### 🖥️ Frontend Setup
 
 1. Navigate to frontend directory:
 ```bash
@@ -109,7 +109,7 @@ npm run dev
 
 The frontend will run on `http://localhost:3000`
 
-## Database Setup
+## 🗄️ Database Setup
 
 The app uses MongoDB with the following collections:
 - `users` - User accounts
@@ -137,7 +137,7 @@ This will create:
 1. Place actual PDF files in `backend/uploads/` directory
 2. Update the `pdfPath` field in Unit documents to match your actual file paths
 
-### Manual Data Entry
+### ✍️ Manual Data Entry
 
 You can also add data using MongoDB Compass or MongoDB shell:
 
@@ -168,7 +168,7 @@ db.units.insertOne({
 })
 ```
 
-## Uploading PDFs
+## 📤 Uploading PDFs
 
 1. Place your PDF files in the `backend/uploads/` directory
 2. The `pdfPath` field in the Unit document should match the file path relative to `backend/uploads/`
@@ -198,9 +198,9 @@ The seed script has created:
 - File location: `backend/uploads/math/unit1.pdf`
 - pdfPath in database: `math/unit1.pdf`
 
-## Security Features
+## 🔐 Security Features
 
-### PDF Protection (Best Effort)
+### 🛡️ PDF Protection (Best Effort)
 - ✅ PDFs are served through authenticated API endpoints
 - ✅ Right-click context menu disabled
 - ✅ Text selection disabled
@@ -209,29 +209,29 @@ The seed script has created:
 - ✅ No direct PDF URL exposure
 
 
-## API Endpoints
+## 🔌 API Endpoints
 
-### Authentication
+### 🔑Authentication
 - `POST /api/auth/signup` - Create new account
 - `POST /api/auth/login` - Login
 - `GET /api/auth/me` - Get current user
 
-### Colleges
+### 🏫 Colleges
 - `GET /api/colleges` - Get all colleges
 - `POST /api/colleges/:id/select` - Select college for user
 
-### Semesters
+### 📅 Semesters
 - `GET /api/semesters` - Get semesters for user's college
 - `GET /api/semesters/college/:collegeId` - Get semesters for specific college
 
-### Subjects
+### 📚 Subjects
 - `GET /api/subjects/semester/:semesterId` - Get subjects for semester
 
-### Units
+### 📄 Units
 - `GET /api/units/subject/:subjectId` - Get units for subject
 - `GET /api/units/:id/pdf` - Get PDF file (authenticated)
 
-## Development
+## 🧪 Development
 
 ### Backend Development
 ```bash
@@ -245,7 +245,7 @@ cd frontend
 npm run dev  # Vite dev server with hot reload
 ```
 
-## Production Build
+## 🚀 Production Build
 
 ### Frontend
 ```bash
@@ -260,7 +260,7 @@ cd backend
 npm start
 ```
 
-## Future Enhancements
+## 🔮 Future Enhancements
 
 - [ ] Admin panel for managing colleges, semesters, subjects, and units
 - [ ] PDF upload interface
