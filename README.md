@@ -54,8 +54,8 @@ Notes-App/
 
 ### 📌 Prerequisites
 - Node.js (v16 or higher)
-- MongoDB (local or MongoDB Atlas)
-- npm or yarn
+- MongoDB (MongoDB Atlas)
+- npm 
 
 ### 🔧 Backend Setup
 
