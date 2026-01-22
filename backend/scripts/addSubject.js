@@ -1,5 +1,9 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import AWS from 'aws-sdk';
+import fs from 'fs';
+import path from 'path';
+
 import College from '../models/College.js';
 import Course from '../models/Course.js';
 import Semester from '../models/Semester.js';
@@ -7,6 +11,15 @@ import Subject from '../models/Subject.js';
 import Unit from '../models/Unit.js';
 
 dotenv.config();
+
+AWS.config.update({
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    region: process.env.AWS_REGION,
+});
+
+const s3 = new AWS.S3();
+
 
 const addSubject = async () => {
     try {
@@ -20,21 +33,23 @@ const addSubject = async () => {
         // ============================================
         const collegeName = 'J.C. Bose University of Science and Technology, YMCA Faridabad, Haryana';
         const courseName = 'BCA(General)';
-        const semesterNumber = 2;  // Semester 4
-        const subjectName = 'Data Structures';  // Subject name
-        const subjectCode = 'BCG-104-V1';  // Subject code for Semester 4
-        const pdfFolder = `dsGeneral`
+        const semesterNumber = 6;  // Semester 6
+        const subjectName = 'High Speed Networks';  // Subject name
+        const subjectCode = 'BCG-308-V';  // Subject code for Semester 4
+        const pdfFolder = `high_speed_network`
 
         // ============================================
         // CONFIGURE YOUR UNITS HERE:
         // ============================================
 
+
         const units = [
-            { name: 'Unit 1: Introduction and Overview' },
-            { name: 'Unit 2: Linked Lists' },
-            { name: 'Unit 3: Stacks' },
-            { name: 'Unit 4: Graphs' }
+            { name: 'Unit 1: High Speed Networks' },
+            { name: 'Unit 2: Congestion and Traffic Management' },
+            { name: 'Unit 3: TCP and ATM Congestion Control TCP' },
+            { name: 'Unit 4: Integrated and Differentiated Services' }
         ];
+
         // const units = [
         //     { name: 'Unit 1: ' },
         //     { name: 'Unit 2: ' },
@@ -45,7 +60,7 @@ const addSubject = async () => {
         // Get college
         const college = await College.findOne({ name: collegeName });
         if (!college) {
-            console.error(`❌ College "${collegeName}" not found!`);
+            console.error(` College "${collegeName}" not found!`);
             console.log('Available colleges:');
             const allColleges = await College.find({});
             allColleges.forEach(c => console.log(`  - ${c.name}`));
@@ -58,7 +73,7 @@ const addSubject = async () => {
             name: courseName
         });
         if (!course) {
-            console.error(`❌ Course "${courseName}" not found for ${collegeName}!`);
+            console.error(` Course "${courseName}" not found for ${collegeName}!`);
             console.log('Available courses:');
             const allCourses = await Course.find({ collegeId: college._id });
             allCourses.forEach(c => console.log(`  - ${c.name}`));
@@ -71,14 +86,14 @@ const addSubject = async () => {
             number: semesterNumber
         });
         if (!semester) {
-            console.error(`❌ Semester ${semesterNumber} not found for ${courseName}!`);
+            console.error(` Semester ${semesterNumber} not found for ${courseName}!`);
             console.log('Available semesters:');
             const allSemesters = await Semester.find({ courseId: course._id }).sort({ number: 1 });
             allSemesters.forEach(s => console.log(`  - ${s.name || `Semester ${s.number}`}`));
             process.exit(1);
         }
 
-        console.log(`\n📚 Adding subject to:`);
+        console.log(`\n Adding subject to:`);
         console.log(`   College: ${collegeName}`);
         console.log(`   Course: ${courseName}`);
         console.log(`   Semester: ${semesterNumber}`);
@@ -96,42 +111,67 @@ const addSubject = async () => {
                 name: subjectName,
                 code: subjectCode
             });
-            console.log(`✅ Created subject: ${subjectName}`);
+            console.log(` Created subject: ${subjectName}`);
         } else {
-            console.log(`⚠️  Subject "${subjectName}" already exists, using existing one`);
+            console.log(` Subject "${subjectName}" already exists, using existing one`);
         }
 
         // Create / update units
-        console.log(`\n📦 Creating ${units.length} units...\n`);
+        console.log(`\n Creating ${units.length} units...\n`);
+
         for (let i = 0; i < units.length; i++) {
+            const unitNumber = i + 1;
+
+            const localPdfPath = path.join(
+                'uploads',
+                pdfFolder,
+                `sem${semesterNumber}`,
+                `unit${unitNumber}.pdf`
+            );
+
+            if (!fs.existsSync(localPdfPath)) {
+                console.error(` PDF not found: ${localPdfPath}`);
+                process.exit(1);
+            }
+
+            const fileBuffer = fs.readFileSync(localPdfPath);
+
+            const uploadResult = await s3.upload({
+                Bucket: process.env.AWS_BUCKET_NAME,
+                Key: `notes/${subjectCode}/sem${semesterNumber}/unit${i + 1}.pdf`,
+                Body: fileBuffer,
+                ContentType: 'application/pdf',
+            }).promise();
+
+            console.log(` Uploaded to S3: ${uploadResult.Location}`);
+
             let unit = await Unit.findOne({
                 subjectId: subject._id,
-                number: i + 1
+                number: unitNumber,
             });
 
-            const targetPdfPath = `${pdfFolder}/sem${semesterNumber}/unit${i + 1}.pdf`;
-
             if (!unit) {
-                unit = await Unit.create({
+                await Unit.create({
                     subjectId: subject._id,
                     name: units[i].name,
-                    number: i + 1,
-                    pdfPath: targetPdfPath,
-                    description: units[i].description
+                    number: unitNumber,
+                    pdfUrl: uploadResult.Location,
+                    s3Key: uploadResult.Key,
+                    description: units[i].description,
                 });
-                console.log(`✅ Created unit ${i + 1}: ${units[i].name} (pdfPath: ${targetPdfPath})`);
+                console.log(` Created Unit ${unitNumber}: ${units[i].name}`);
             } else {
-                // Also update existing units so pdfPath stays correct
                 unit.name = units[i].name;
                 unit.description = units[i].description;
-                unit.pdfPath = targetPdfPath;
+                unit.pdfUrl = uploadResult.Location;
+                unit.s3Key = uploadResult.Key;
                 await unit.save();
-                console.log(`⚠️  Updated existing unit ${i + 1}: ${units[i].name} (pdfPath: ${targetPdfPath})`);
+                console.log(` Updated Unit ${unitNumber}: ${units[i].name}`);
             }
         }
 
-        console.log('\n✅ Subject and units created successfully!');
-        console.log(`\n📁 Next steps:`);
+        console.log('\n Subject and units created successfully!');
+        console.log(`\n Next steps:`);
         console.log(`   1. Create folder: backend/uploads/${pdfFolder}/sem${semesterNumber}/`);
         console.log(`   2. Place PDF files with these names:`);
         for (let i = 0; i < units.length; i++) {
@@ -141,7 +181,7 @@ const addSubject = async () => {
 
         process.exit(0);
     } catch (error) {
-        console.error('❌ Error:', error);
+        console.error(' Error:', error);
         process.exit(1);
     }
 };

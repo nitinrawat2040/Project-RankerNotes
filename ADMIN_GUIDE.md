@@ -393,7 +393,7 @@ db.units.insertMany([
 ### Rule 2: Use Forward Slashes
 - Use `/` not `\` even on Windows
 - Example: `csharp/sem6/unit1.pdf` ✅
-- Example: `csharp\sem6\unit1.pdf` ❌
+- Example: `csharp\sem6\unit1.pdf` 
 
 ### Rule 3: Match File Names
 - If `pdfPath` is `folder/subfolder/file.pdf`

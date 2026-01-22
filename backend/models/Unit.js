@@ -16,7 +16,11 @@ const unitSchema = new mongoose.Schema({
     required: true,
     min: 1
   },
-  pdfPath: {
+  pdfUrl: {
+    type: String,
+    required: true
+  },
+  s3Key: {
     type: String,
     required: true
   },

@@ -1,12 +1,7 @@
+import s3 from '../config/s3.js';
 import express from 'express';
 import { authenticate } from '../middleware/auth.js';
 import Unit from '../models/Unit.js';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const router = express.Router();
 
@@ -34,36 +29,64 @@ router.get('/:id', authenticate, async (req, res) => {
   }
 });
 
-// Serve PDF file securely (authenticated access only)
-// Frontend will render this using pdfjs-dist with download disabled
+// Serve PDF via AWS S3 signed URL
 router.get('/:id/pdf', authenticate, async (req, res) => {
   try {
     const unit = await Unit.findById(req.params.id);
+
     if (!unit) {
       return res.status(404).json({ message: 'Unit not found' });
     }
 
-    const pdfPath = path.join(__dirname, '..', 'uploads', unit.pdfPath);
-    
-    if (!fs.existsSync(pdfPath)) {
-      return res.status(404).json({ message: 'PDF file not found' });
+    if (!unit.s3Key) {
+      return res.status(400).json({ message: 'PDF not configured for this unit' });
     }
 
-    // Set headers to prevent caching and downloading
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'inline; filename="view.pdf"');
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
-    
-    // Stream the PDF file
-    const fileStream = fs.createReadStream(pdfPath);
-    fileStream.pipe(res);
+    const bucketName = process.env.AWS_BUCKET_NAME;
+    const s3Key = unit.s3Key;
+
+    console.log('S3 KEY:', s3Key);
+    console.log('BUCKET:', bucketName);
+    console.log('REGION:', process.env.AWS_REGION);
+
+    // Verify the object exists in S3 before generating signed URL
+    try {
+      await s3.headObject({
+        Bucket: bucketName,
+        Key: s3Key
+      }).promise();
+      console.log('✅ Object exists in S3');
+    } catch (headError) {
+      console.error('❌ Object not found in S3:', headError.message);
+      if (headError.code === 'NotFound' || headError.statusCode === 404) {
+        return res.status(404).json({
+          message: 'PDF file not found in S3. Please upload the PDF file.',
+          details: `S3 Key: ${s3Key}`
+        });
+      }
+      // If it's a permissions error, still try to generate the URL
+      console.warn('⚠️ Could not verify object existence, proceeding anyway:', headError.message);
+    }
+
+    // Generate signed URL with proper content type
+    const signedUrl = s3.getSignedUrl('getObject', {
+      Bucket: bucketName,
+      Key: s3Key,
+      Expires: 60 * 5, // 5 minutes
+      ResponseContentType: 'application/pdf'
+      // Removed ResponseContentDisposition as it might cause issues with some S3 configurations
+    });
+
+    console.log('✅ Signed URL generated successfully');
+    res.json({ url: signedUrl });
+
   } catch (error) {
-    console.error('PDF serving error:', error);
-    res.status(500).json({ message: 'Error serving PDF', error: error.message });
+    console.error('❌ PDF signed URL error:', error);
+    res.status(500).json({
+      message: 'Error generating PDF URL',
+      error: error.message
+    });
   }
 });
 
 export default router;
-

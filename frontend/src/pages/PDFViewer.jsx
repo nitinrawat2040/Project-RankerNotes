@@ -78,18 +78,31 @@ const PDFViewer = () => {
     const loadPDF = async () => {
         try {
             setLoading(true);
+            setError('');
 
-            // Step 1: get unit details to fetch pdfPath
-            const unitRes = await axios.get(`http://localhost:5100/api/units/${unitId}`, {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`
+            // 🔐 Call backend to get signed S3 URL
+            const res = await axios.get(
+                `http://localhost:5100/api/units/${unitId}/pdf`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem('token')}`
+                    }
                 }
+            );
+
+            const signedPdfUrl = res.data.url;
+            console.log('Signed URL received:', signedPdfUrl);
+
+            // Load PDF using pdf.js
+            // Note: Don't set httpHeaders with CORS headers - those are response headers, not request headers
+            const loadingTask = pdfjsLib.getDocument({
+                url: signedPdfUrl,
+                withCredentials: false,
+                // Disable auto-fetch to handle errors better
+                disableAutoFetch: false,
+                disableStream: false
             });
 
-            const pdfPath = unitRes.data.pdfPath; // data_structure_ii/sem2/unit1.pdf
-            const pdfUrl = `http://localhost:5100/uploads/${pdfPath}`;
-
-            const loadingTask = pdfjsLib.getDocument({ url: pdfUrl });
             const pdf = await loadingTask.promise;
 
             setPdfDoc(pdf);
@@ -97,12 +110,51 @@ const PDFViewer = () => {
             setPageNum(1);
             renderPage(pdf, 1);
         } catch (error) {
-            console.error(error);
-            setError('Failed to load PDF');
+            console.error('PDF loading error:', error);
+            console.error('Error details:', {
+                message: error.message,
+                name: error.name,
+                status: error.status || error.response?.status,
+                response: error.response?.data
+            });
+
+            // Handle backend API errors
+            if (error.response) {
+                if (error.response.status === 404) {
+                    setError(error.response.data?.message || 'PDF not found. The file may not have been uploaded yet.');
+                } else if (error.response.status === 403) {
+                    setError('Access denied. Please check your permissions.');
+                } else if (error.response.status === 400) {
+                    setError(error.response.data?.message || 'Invalid request. Please contact support.');
+                } else {
+                    setError(`Server error: ${error.response.data?.message || error.response.statusText}`);
+                }
+                return;
+            }
+
+            // Handle PDF.js specific errors
+            if (error.name === 'UnexpectedResponseException') {
+                if (error.status === 400) {
+                    setError('PDF file not found in S3. Please verify the file was uploaded correctly.');
+                } else if (error.status === 403) {
+                    setError('Access denied to PDF. The signed URL may have expired or permissions are incorrect.');
+                } else if (error.status === 404) {
+                    setError('PDF file not found in S3 storage.');
+                } else {
+                    setError(`Failed to load PDF: Server returned ${error.status}. Check browser console for details.`);
+                }
+            } else if (error.message?.includes('CORS') || error.message?.includes('cross-origin')) {
+                setError('CORS error: S3 bucket needs CORS configuration. See S3_CORS_SETUP.md for instructions.');
+            } else if (error.message?.includes('Invalid PDF') || error.message?.includes('format')) {
+                setError('Invalid PDF file format. Please check the file.');
+            } else {
+                setError(`Failed to load PDF: ${error.message || 'Unknown error'}. Check browser console for details.`);
+            }
         } finally {
             setLoading(false);
         }
     };
+
 
 
     const renderPage = async (pdf, pageNumber) => {
