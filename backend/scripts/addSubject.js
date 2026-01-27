@@ -33,21 +33,22 @@ const addSubject = async () => {
         // ============================================
         const collegeName = 'J.C. Bose University of Science and Technology, YMCA Faridabad, Haryana';
         const courseName = 'BCA(General)';
-        const semesterNumber = 6;  // Semester 6
-        const subjectName = 'High Speed Networks';  // Subject name
-        const subjectCode = 'BCG-308-V';  // Subject code for Semester 4
-        const pdfFolder = `high_speed_network`
+        const semesterNumber = 2;  // Semester 6
+        const subjectName = 'Data Structures';  // Subject name
+        const subjectCode = 'BCG-104-V1';  // Subject code for Semester 4
+        const pdfFolder = `datastructure`
 
         // ============================================
         // CONFIGURE YOUR UNITS HERE:
         // ============================================
 
 
+
         const units = [
-            { name: 'Unit 1: High Speed Networks' },
-            { name: 'Unit 2: Congestion and Traffic Management' },
-            { name: 'Unit 3: TCP and ATM Congestion Control TCP' },
-            { name: 'Unit 4: Integrated and Differentiated Services' }
+            { name: 'Unit 1: Introduction and Overview' },
+            { name: 'Unit 2: Linked Lists' },
+            { name: 'Unit 3: Stacks' },
+            { name: 'Unit 4: Graphs' }
         ];
 
         // const units = [
