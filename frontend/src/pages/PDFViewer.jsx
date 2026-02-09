@@ -48,33 +48,6 @@ const PDFViewer = () => {
         };
     }, [unitId]);
 
-    // const loadPDF = async () => {
-    //     try {
-    //         setLoading(true);
-    //         const response = await axios.get(`/api/units/${unitId}/pdf`, {
-    //             responseType: 'blob',
-    //             headers: {
-    //                 Authorization: `Bearer ${localStorage.getItem('token')}`
-    //             }
-    //         });
-
-    //         const blob = new Blob([response.data], { type: 'application/pdf' });
-    //         const url = URL.createObjectURL(blob);
-
-    //         const loadingTask = pdfjsLib.getDocument({ url });
-    //         const pdf = await loadingTask.promise;
-
-    //         setPdfDoc(pdf);
-    //         setNumPages(pdf.numPages);
-    //         setPageNum(1);
-    //         renderPage(pdf, 1);
-    //     } catch (error) {
-    //         setError('Failed to load PDF');
-    //         console.error(error);
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
     const loadPDF = async () => {
         try {
             setLoading(true);

@@ -42,7 +42,7 @@ app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 
     // Connect to MongoDB
-    const mongoUri = process.env.MONGODB_URI || 'mongodb+srv://rawatdivya0129_db_user:4zZ94EkZ2Wdj3ehR@cluster0.gq8x17t.mongodb.net/?appName=Cluster0';
+    const mongoUri = process.env.MONGODB_URI;
     mongoose
         .connect(mongoUri)
         .then(() => {
