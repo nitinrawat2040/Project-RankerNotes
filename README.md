@@ -1,4 +1,4 @@
-# 🗂️ Notes App - Secure PDF Viewer
+# 🗂️ RankerNotes – Secure Academic Notes Platform
 ![Status](https://img.shields.io/badge/status-active%20development-orange)
 
 A web application where students can view study materials (PDFs) with restricted access - no downloads and no screenshots (best-effort protection).
